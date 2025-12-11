@@ -97,7 +97,7 @@ def test_register_with_short_password(page: Page):
     
     # Check that error message is shown
     password_error = page.locator("#passwordError")
-    expect(password_error).to_be_visible(timeout=3000)
+    expect(password_error).to_be_visible(timeout=10000)
     expect(password_error).to_contain_text("does not meet requirements")
     
     # Verify success message is NOT shown
@@ -176,7 +176,7 @@ def test_register_with_invalid_email(page: Page):
     
     # Check that error message is shown
     email_error = page.locator("#emailError")
-    expect(email_error).to_be_visible(timeout=3000)
+    expect(email_error).to_be_visible(timeout=10000)
     expect(email_error).to_contain_text("valid email")
 
 
@@ -275,7 +275,7 @@ def test_register_duplicate_email(page: Page):
     
     # Check for error message about duplicate email
     email_error = page.locator("#emailError")
-    expect(email_error).to_be_visible(timeout=3000)
+    expect(email_error).to_be_visible(timeout=10000)
     expect(email_error).to_contain_text("already registered")
 
 

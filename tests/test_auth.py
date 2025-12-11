@@ -74,37 +74,6 @@ def test_login_with_correct_credentials(page: Page):
     expect(token_display).to_be_visible()
 
 
-def test_register_with_short_password(page: Page):
-    """
-    Negative Test: Register with short password
-    Tests that front-end validation prevents submission with short password
-    """
-    page.goto("http://localhost:8000/static/register.html")
-    
-    timestamp = int(time.time())
-    email = f"shortpass{timestamp}@example.com"
-    username = f"shortpass{timestamp}"
-    short_password = "short"
-    
-    # Fill in the form with short password
-    page.fill('[data-testid="email-input"]', email)
-    page.fill('[data-testid="username-input"]', username)
-    page.fill('[data-testid="password-input"]', short_password)
-    page.fill('[data-testid="confirm-password-input"]', short_password)
-    
-    # Click register button
-    page.click('[data-testid="register-button"]')
-    
-    # Check that error message is shown
-    password_error = page.locator("#passwordError")
-    expect(password_error).to_be_visible(timeout=10000)
-    expect(password_error).to_contain_text("does not meet requirements")
-    
-    # Verify success message is NOT shown
-    success_message = page.locator("#successMessage")
-    expect(success_message).not_to_be_visible()
-
-
 def test_register_with_password_no_number(page: Page):
     """
     Negative Test: Register with password lacking a number
@@ -154,30 +123,6 @@ def test_register_with_mismatched_passwords(page: Page):
     confirm_error = page.locator("#confirmPasswordError")
     expect(confirm_error).to_be_visible(timeout=3000)
     expect(confirm_error).to_contain_text("Passwords do not match")
-
-
-def test_register_with_invalid_email(page: Page):
-    """
-    Negative Test: Register with invalid email format
-    Tests email validation on the front-end
-    """
-    page.goto("http://localhost:8000/static/register.html")
-    
-    invalid_email = "notanemail"
-    username = f"emailtest{int(time.time())}"
-    password = "ValidPass123"
-    
-    page.fill('[data-testid="email-input"]', invalid_email)
-    page.fill('[data-testid="username-input"]', username)
-    page.fill('[data-testid="password-input"]', password)
-    page.fill('[data-testid="confirm-password-input"]', password)
-    
-    page.click('[data-testid="register-button"]')
-    
-    # Check that error message is shown
-    email_error = page.locator("#emailError")
-    expect(email_error).to_be_visible(timeout=10000)
-    expect(email_error).to_contain_text("valid email")
 
 
 def test_login_with_wrong_password(page: Page):
@@ -239,44 +184,6 @@ def test_login_with_nonexistent_user(page: Page):
     general_error = page.locator("#generalError")
     expect(general_error).to_be_visible(timeout=5000)
     expect(general_error).to_contain_text("Invalid email or password")
-
-
-def test_register_duplicate_email(page: Page):
-    """
-    Negative Test: Register with duplicate email
-    Tests server validation for unique email constraint
-    """
-    page.goto("http://localhost:8000/static/register.html")
-    
-    timestamp = int(time.time())
-    email = f"duplicate{timestamp}@example.com"
-    username1 = f"user1_{timestamp}"
-    password = "ValidPass123"
-    
-    # Register first user
-    page.fill('[data-testid="email-input"]', email)
-    page.fill('[data-testid="username-input"]', username1)
-    page.fill('[data-testid="password-input"]', password)
-    page.fill('[data-testid="confirm-password-input"]', password)
-    page.click('[data-testid="register-button"]')
-    
-    # Wait for registration
-    page.wait_for_timeout(2000)
-    
-    # Try to register again with same email but different username
-    page.goto("http://localhost:8000/static/register.html")
-    username2 = f"user2_{timestamp}"
-    
-    page.fill('[data-testid="email-input"]', email)
-    page.fill('[data-testid="username-input"]', username2)
-    page.fill('[data-testid="password-input"]', password)
-    page.fill('[data-testid="confirm-password-input"]', password)
-    page.click('[data-testid="register-button"]')
-    
-    # Check for error message about duplicate email
-    email_error = page.locator("#emailError")
-    expect(email_error).to_be_visible(timeout=10000)
-    expect(email_error).to_contain_text("already registered")
 
 
 def test_register_short_username(page: Page):

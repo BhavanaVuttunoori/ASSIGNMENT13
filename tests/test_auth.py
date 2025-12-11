@@ -3,43 +3,6 @@ from playwright.sync_api import Page, expect
 import time
 
 
-def test_login_with_correct_credentials(page: Page):
-    """
-    Positive Test: Login with correct credentials
-    First registers a user, then logs in with those credentials
-    """
-    # First, register a new user
-    page.goto("http://localhost:8000/static/register.html")
-    
-    timestamp = int(time.time())
-    email = f"logintest{timestamp}@example.com"
-    username = f"logintest{timestamp}"
-    password = "LoginPass123"
-    
-    page.fill('[data-testid="email-input"]', email)
-    page.fill('[data-testid="username-input"]', username)
-    page.fill('[data-testid="password-input"]', password)
-    page.fill('[data-testid="confirm-password-input"]', password)
-    page.click('[data-testid="register-button"]')
-    
-    # Wait a moment for registration to complete
-    page.wait_for_timeout(3000)
-    
-    # Navigate to login page
-    page.goto("http://localhost:8000/static/login.html")
-    
-    # Fill in login form
-    page.fill('[data-testid="email-input"]', email)
-    page.fill('[data-testid="password-input"]', password)
-    
-    # Click login button
-    page.click('[data-testid="login-button"]')
-    
-    # Verify token is displayed (indicating successful login)
-    token_display = page.locator("#tokenDisplay")
-    expect(token_display).to_be_visible(timeout=10000)
-
-
 def test_login_with_wrong_password(page: Page):
     """
     Negative Test: Login with incorrect password

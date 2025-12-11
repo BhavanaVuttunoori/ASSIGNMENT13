@@ -1,328 +1,412 @@
-JWT Authentication API - Assignment 13
-The Assignment 13 deliverable is a fully tested FastAPI authentication service with JWT implementation, packaged for local development, Docker usage, and CI/CD. This README documents how the project is structured, what was implemented, and how to reproduce the results.
+# JWT Authentication API - Assignment 13
 
-Project Highlights
-Built with FastAPI and SQLAlchemy to expose authentication endpoints through REST API with database persistence. JWT token-based authentication with secure password hashing using bcrypt. Robust Pydantic validation in schemas.py with explicit error handling (email format, password strength, duplicate users). Comprehensive automated test suite with Playwright E2E tests covering positive and negative scenarios (11 tests). SQLAlchemy ORM models with User table including email, username, and hashed password storage. Continuous Integration via GitHub Actions to test with PostgreSQL, build Docker images, and deploy to Docker Hub. Containerized delivery: public Docker image available at bhavanavuttunoori/jwt-auth-api. Front-end HTML pages with client-side validation for registration and login.
+The Assignment 13 deliverable is a fully tested FastAPI JWT authentication service with user registration and login, packaged for local development, Docker usage, and CI/CD. This README documents how the project is structured, what was implemented, and how to reproduce the results.
 
-Getting Started
-1. Setup Environment
+## Project Highlights
+
+Built with FastAPI and SQLAlchemy to expose user registration and login endpoints with JWT token-based authentication and database persistence. Secure user authentication with bcrypt password hashing and JWT token generation. Front-end HTML pages with client-side validation for registration and login. Robust Pydantic validation in schemas.py with explicit error handling (email format, password strength, username validation). Comprehensive automated Playwright E2E test suite covering authentication scenarios. SQLAlchemy ORM User model with proper password hashing. Continuous Integration via GitHub Actions to test with PostgreSQL and Playwright. Containerized delivery: Docker image ready for deployment at bhavanavuttunoori/jwt-auth-api.
+
+## Getting Started
+
+### 1. Setup Environment
+
+```powershell
 cd "assign 13 web api"
 python -m venv venv
-venv\Scripts\activate
+venv\Scripts\activate  # Windows
 pip install -r requirements.txt
-playwright install chromium
-2. Run the Application Locally
-python main.py
-Navigate to http://localhost:8000/docs for the Swagger UI or access front-end pages at http://localhost:8000/static/register.html and http://localhost:8000/static/login.html.
+```
 
-Docker Usage
-Build Locally (optional)
+### 2. Run the Application Locally
+
+```powershell
+uvicorn main:app --reload
+```
+
+Navigate to http://localhost:8000/static/register.html for registration or http://localhost:8000/static/login.html for login.
+
+## Docker Usage
+
+### Build Locally (optional)
+
+```bash
 docker build -t jwt-auth-api .
-docker run -p 8000:8000 -e DATABASE_URL=postgresql://user:password@host:5432/authdb -e SECRET_KEY=your-secret-key jwt-auth-api
-Pull Prebuilt Image
+docker run -p 8000:8000 -e DATABASE_URL=postgresql://user:password@localhost:5432/authdb jwt-auth-api
+```
+
+### Pull Prebuilt Image
+
+```bash
 docker pull bhavanavuttunoori/jwt-auth-api:latest
-docker run -p 8000:8000 -e DATABASE_URL=postgresql://user:password@host:5432/authdb -e SECRET_KEY=your-secret-key bhavanavuttunoori/jwt-auth-api:latest
-Using Docker Compose
+docker run -p 8000:8000 -e DATABASE_URL=postgresql://user:password@localhost:5432/authdb bhavanavuttunoori/jwt-auth-api:latest
+```
+
+### Using Docker Compose
+
+```bash
 docker-compose up -d
+```
+
 The application will be available at http://localhost:8000 with PostgreSQL database.
 
-Testing Strategy
-E2E Tests (tests/test_auth.py): Playwright tests covering user registration and login flows. Positive Tests: Valid registration, successful login with correct credentials, UI elements verification. Negative Tests: Short password, password without numbers, mismatched passwords, invalid email format, wrong password login, non-existent user, duplicate email, short username.
+## Testing Strategy
+
+**E2E Tests (tests/test_auth.py)**: verify authentication flows with Playwright browser automation.
+
+**Integration Tests**: exercise registration and login through front-end pages with real browser interactions.
 
 Run the full suite:
 
+```bash
 pytest tests/test_auth.py -v
-Run specific test:
+```
 
-pytest tests/test_auth.py::test_register_with_valid_data -v
-Project Structure
+Run with Playwright headed mode:
+
+```bash
+pytest tests/test_auth.py -v --headed
+```
+
+## Project Structure
+
+```
 assign 13 web api/
+├── main.py                  # FastAPI application with auth endpoints
+├── auth.py                  # JWT token generation and password hashing
+├── database.py              # Database configuration and User model
+├── schemas.py               # Pydantic validation schemas
+├── static/
+│   ├── register.html        # User registration page
+│   └── login.html           # User login page
+├── tests/
+│   ├── conftest.py          # Pytest fixtures with Playwright setup
+│   └── test_auth.py         # Playwright E2E authentication tests
 ├── .github/
 │   └── workflows/
 │       └── ci-cd.yml        # GitHub Actions CI/CD pipeline
-├── static/
-│   ├── register.html        # Registration page with client-side validation
-│   └── login.html           # Login page with JWT token display
-├── tests/
-│   ├── conftest.py          # Pytest configuration and fixtures
-│   └── test_auth.py         # Playwright E2E tests (11 tests)
-├── auth.py                  # JWT token generation and password hashing utilities
-├── database.py              # Database configuration and User model
-├── main.py                  # FastAPI application with authentication endpoints
-├── schemas.py               # Pydantic validation schemas
-├── requirements.txt         # Python dependencies
-├── Dockerfile               # Docker container configuration
-├── docker-compose.yml       # Multi-container orchestration
-├── pytest.ini               # Pytest configuration
-├── .env.example             # Environment variables template
-└── README.md                # This file
-API Endpoints
-Authentication Operations
-Register User:
+├── Dockerfile
+├── docker-compose.yml
+├── requirements.txt
+├── pytest.ini
+├── README.md
+└── REFLECTION.md
+```
 
+## API Endpoints
+
+### Authentication Operations
+
+**Register User:**
+
+```http
 POST /register
 Content-Type: application/json
 
 {
-  "email": "user@example.com",
   "username": "johndoe",
+  "email": "john@example.com",
   "password": "SecurePass123"
 }
-Response (201):
+```
 
-{
-  "message": "User registered successfully",
-  "detail": "User johndoe has been created"
-}
-Login User:
+**Login:**
 
+```http
 POST /login
 Content-Type: application/json
 
 {
-  "email": "user@example.com",
+  "email": "john@example.com",
   "password": "SecurePass123"
 }
-Response (200):
 
+Response:
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "access_token": "eyJhbGc...",
   "token_type": "bearer"
 }
-Get Current User (Protected):
+```
 
-GET /users/me?token=<jwt_token>
-Response (200):
+**Health Check:**
 
-{
-  "id": 1,
-  "email": "user@example.com",
-  "username": "johndoe",
-  "created_at": "2025-12-10T10:00:00"
-}
-Health Check:
-
+```http
 GET /health
-Response (200):
+```
 
-{
-  "status": "healthy"
-}
-Pydantic Validation Implementation
-The Pydantic schemas in schemas.py provide comprehensive validation:
+## Pydantic Validation
 
-UserCreate Schema:
+The schemas.py module provides comprehensive validation:
 
-Email validation using EmailStr type for proper email format. Username validation: 3-50 characters, alphanumeric with underscores/hyphens allowed. Password validation: Minimum 8 characters, must contain at least one letter and one digit. Custom validators enforce password strength requirements.
+**UserCreate Schema:**
 
-UserLogin Schema:
+- Email: Valid email format using EmailStr validator
+- Username: 3-50 characters, alphanumeric with underscores/hyphens
+- Password: Minimum 8 characters with at least one letter and one number
 
-Email and password fields with EmailStr validation.
+**UserLogin Schema:**
 
-Token Schema:
+- Email: Valid email format
+- Password: Required string
 
-access_token field for JWT token. token_type field defaulting to "bearer".
+**Token Schema:**
 
-MessageResponse Schema:
+- access_token: JWT token string
+- token_type: Authentication type (bearer)
 
-Generic response schema for success/error messages.
+Example validation errors are caught and returned with appropriate HTTP status codes (422 Unprocessable Entity).
 
-Example validation in schemas.py:
+## JWT Authentication
 
-from pydantic import BaseModel, EmailStr, Field, validator
+JWT tokens are generated using the python-jose library with HS256 algorithm:
 
-class UserCreate(BaseModel):
-    email: EmailStr
-    username: str = Field(..., min_length=3, max_length=50)
-    password: str = Field(..., min_length=8)
-    
-    @validator('password')
-    def password_strength(cls, v):
-        if not any(char.isdigit() for char in v):
-            raise ValueError('Password must contain at least one digit')
-        if not any(char.isalpha() for char in v):
-            raise ValueError('Password must contain at least one letter')
-        return v
-JWT Authentication Implementation
-The JWT authentication in auth.py uses python-jose and passlib:
+- Secret key configurable via environment variable
+- Token expiration time configurable (default: 30 minutes)
+- Tokens include user email and expiration timestamp
+- Password verification using bcrypt with automatic salt generation
 
-Password Hashing:
+Security features:
 
-Uses bcrypt algorithm via passlib for secure password hashing. Automatic salt generation for each password. verify_password() function to check plain password against hashed password.
+- Passwords never stored in plain text
+- Bcrypt hashing with automatic salt
+- JWT tokens signed and verifiable
+- Configurable token expiration
 
-JWT Token Generation:
+## Database Schema
 
-create_access_token() function creates signed JWT tokens. Tokens include user email and username in payload. Configurable expiration time (default 30 minutes). Uses HS256 algorithm with secret key.
+**Users Table:**
 
-Token Verification:
+- id (Integer, Primary Key)
+- username (String, Unique, Indexed)
+- email (String, Unique, Indexed)
+- hashed_password (String)
 
-verify_token() function decodes and validates JWT tokens. Returns user email from token payload if valid. Returns None for invalid or expired tokens.
+All passwords are hashed using bcrypt before storage. Duplicate email/username detection prevents registration conflicts.
 
-Database Schema
-Users Table:
+## Front-End Pages
 
-id (Integer, Primary Key, Auto-increment)
-email (String, Unique, Indexed)
-username (String, Unique, Indexed)
-hashed_password (String)
-created_at (DateTime, Auto-set on creation)
-Front-End Implementation
-Registration Page (static/register.html)
-Features:
+### Registration Page (static/register.html)
 
-Email input with HTML5 and JavaScript validation. Username input with length validation (3-50 characters). Password input with real-time strength indicator showing: At least 8 characters requirement. Contains letter requirement. Contains number requirement. Confirm password field with matching validation. Client-side validation before form submission. Success message display on successful registration. Error message display for validation failures or server errors. Responsive design with gradient background. Loading spinner during API calls.
+- Email input with format validation
+- Username input with length validation
+- Password input with strength requirements display
+- Confirm password with matching validation
+- Real-time validation feedback
+- Success/error message display
 
-Validation Flow:
+### Login Page (static/login.html)
 
-User types in form fields. Real-time validation provides immediate feedback. Password requirements turn green as conditions are met. On submit, client-side validation runs first. If valid, POST request sent to /register endpoint. Server validates with Pydantic schemas. Success or error message displayed based on response.
+- Email input
+- Password input
+- JWT token display on successful login
+- Token stored in localStorage
+- Success/error message display
 
-Login Page (static/login.html)
-Features:
+Both pages feature:
 
-Email input with format validation. Password input. Client-side validation before submission. JWT token display section (for demonstration). Token automatically stored in localStorage. Success message on successful login. Error message for invalid credentials (401). Responsive design matching registration page. Loading spinner during API calls.
+- Modern gradient backgrounds
+- Responsive design
+- Client-side validation
+- Server-side validation integration
+- data-testid attributes for E2E testing
 
-Authentication Flow:
+## Continuous Integration
 
-User enters email and password. Client validates input format. POST request sent to /login endpoint. Server verifies credentials and password hash. On success, JWT token returned and displayed. Token stored in localStorage for future requests. On failure, error message shown.
+The repository includes a GitHub Actions workflow (.github/workflows/ci-cd.yml) that runs on every push:
 
-Continuous Integration
-The repository includes a GitHub Actions workflow (.github/workflows/ci-cd.yml) that runs on every push to main/master:
+**Test Job:**
 
-Test Job:
+- Set up Python 3.11
+- Start PostgreSQL 15 service container
+- Install dependencies with caching
+- Install Playwright with system dependencies
+- Start FastAPI server in background
+- Run Playwright E2E tests
+- Upload test results as artifacts
 
-Set up Python 3.11 environment. Start PostgreSQL 15 service container with health checks. Install dependencies including Playwright. Install Playwright Chromium browser. Set environment variables (DATABASE_URL, SECRET_KEY). Initialize database tables. Start FastAPI server in background. Wait for server to be ready with health check polling. Run Playwright E2E tests with pytest. Upload test results and reports as artifacts.
+**Build and Push Job (main branch only):**
 
-Build and Push Job (main/master branch only):
+- Build Docker image
+- Tag with latest and commit SHA
+- Push to Docker Hub (bhavanavuttunoori/jwt-auth-api)
 
-Set up Docker Buildx for multi-platform builds. Log in to Docker Hub using secrets. Extract metadata for image tagging. Build Docker image with optimizations. Tag with 'latest' and commit SHA. Push to Docker Hub repository. Implement build caching for faster builds.
+**Required GitHub Secrets:**
 
-Required GitHub Secrets
-DOCKER_USERNAME: Your Docker Hub username DOCKER_PASSWORD: Your Docker Hub access token or password
+- DOCKER_USERNAME: Your Docker Hub username
+- DOCKER_PASSWORD: Your Docker Hub access token
 
-Assignment Instructions & Deliverables
-Objective: Implement JWT-based authentication with user registration and login, front-end pages, Playwright E2E tests, and maintain CI/CD pipeline for automated testing and deployment.
+## Assignment Instructions & Deliverables
 
-Implementation Checklist
-JWT authentication with /register and /login endpoints. Password hashing with bcrypt for secure storage. Pydantic validation with custom validators for email, username, and password. Front-end registration page with client-side validation. Front-end login page with JWT token storage. Playwright E2E tests covering positive scenarios (valid registration, successful login). Playwright E2E tests covering negative scenarios (short password, invalid email, wrong credentials, duplicates). GitHub Actions workflow with PostgreSQL integration. Automated Playwright test execution in CI. Docker containerization with docker-compose support. Automated Docker Hub deployment on successful tests. Comprehensive documentation.
+**Objective:** Implement and test JWT authentication endpoints with user registration/login, front-end pages with validation, and comprehensive E2E testing with CI/CD pipeline.
 
-Submission Package
-GitHub repository: https://github.com/BhavanaVuttunoori/ASSIGNMENT13 Docker Hub image: bhavanavuttunoori/jwt-auth-api Screenshots demonstrating:
+### Implementation Checklist
 
-Successful GitHub Actions workflow with all tests passing
-Playwright E2E tests passing locally
-Registration page functioning with validation
-Login page functioning with JWT token display
-Grading Guidelines
-Criterion: JWT Authentication
+- SQLAlchemy User model with password hashing
+- Pydantic schemas with validation (email format, password strength)
+- User registration endpoint with duplicate detection
+- User login endpoint with JWT token generation
+- Front-end registration page with client-side validation
+- Front-end login page with token display
+- Playwright E2E tests covering authentication flows
+- FastAPI application with JWT authentication
+- GitHub Actions workflow with PostgreSQL and Playwright
+- Docker containerization with docker-compose support
+- Comprehensive documentation
 
-/register endpoint with duplicate checking, password hashing, and database storage
-/login endpoint returning JWT on valid credentials, 401 on invalid
-Pydantic validation for user input
-Criterion: Front-End Pages
+### Submission Package
 
-register.html with email, password fields and client-side validation
-login.html with email, password fields and success token display
-Client-side checks for email format and password requirements
-Criterion: Playwright E2E Tests
+- GitHub repository: https://github.com/BhavanaVuttunoori/ASSIGNMENT13
+- Docker Hub image: https://hub.docker.com/r/bhavanavuttunoori/jwt-auth-api
+- Screenshots demonstrating:
+  - Successful GitHub Actions workflow
+  - Docker Hub deployment
+  - API documentation (Swagger UI)
+  - User registration working
+  - User login with JWT token
+  - E2E tests passing
 
-Positive tests: valid registration, successful login
-Negative tests: short password, invalid inputs, wrong credentials
-Tests verify UI states and server responses
-Proper use of locators and assertions
-Criterion: CI/CD Pipeline
+## Grading Guidelines
 
-GitHub Actions workflow configured
-PostgreSQL service container for testing
-Playwright tests run automatically
-Docker image built and pushed on success
-Criterion: Documentation
+**Criterion: Authentication Endpoints (30 Points)**
 
-README with setup, running, and testing instructions
-Docker Hub repository link
-Code comments and docstrings
-Helpful Commands
-Task	Command
-Install dependencies	pip install -r requirements.txt
-Install Playwright	playwright install chromium
-Run application	python main.py
-Run application with uvicorn	uvicorn main:app --reload
-Run all E2E tests	pytest tests/test_auth.py -v
-Run specific test	pytest tests/test_auth.py::test_register_with_valid_data -v
-Build Docker image	docker build -t jwt-auth-api .
-Run with Docker Compose	docker-compose up -d
-Stop Docker Compose	docker-compose down
-View container logs	docker-compose logs -f api
-Access registration page	http://localhost:8000/static/register.html
-Access login page	http://localhost:8000/static/login.html
-Access API docs	http://localhost:8000/docs
-Submission Tips
-Ensure all 11 Playwright tests pass locally before pushing. Verify GitHub Actions workflow completes successfully with green checkmarks. Confirm Docker image is pushed to Docker Hub and publicly accessible. Capture screenshots of GitHub Actions success, tests passing, and front-end pages. Test Docker image by pulling and running it locally. Include Docker Hub link in README. Keep SECRET_KEY and sensitive data in environment variables, not in code. Use .gitignore to exclude .env files from version control.
+- Registration endpoint with validation and password hashing
+- Login endpoint with JWT token generation
+- Proper error handling (duplicate users, invalid credentials)
+- Password strength validation
 
-Learning Outcomes
-CLO3: Create Python applications with automated testing
+**Criterion: Front-End Pages (20 Points)**
 
-Playwright E2E tests for registration and login flows
-Test fixtures and browser automation
-Positive and negative test scenarios
-11 comprehensive tests covering edge cases
-CLO4: Set up GitHub Actions for CI
+- Registration page with all required fields
+- Login page with token display
+- Client-side validation
+- Success/error message handling
 
-Automated testing on every push
-PostgreSQL service containers in CI
-Automated Docker builds on successful tests
-Docker Hub deployment automation
-CLO9: Apply containerization techniques
+**Criterion: Pydantic Validation (15 Points)**
 
-Dockerfile for FastAPI application
-Docker Compose for multi-container setup
-Environment variable management
-PostgreSQL container integration
-CLO10: Create, consume, and test REST APIs
+- Email format validation
+- Password strength requirements
+- Username length validation
+- Proper error messages
 
-FastAPI REST endpoints for authentication
-JSON request/response handling
-Status code management (200, 201, 400, 401)
-API documentation with Swagger
-CLO11: Integrate with SQL databases
+**Criterion: E2E Testing (20 Points)**
 
-SQLAlchemy ORM for database operations
-User model with unique constraints
-Database session management
-PostgreSQL for production, initialization on startup
-CLO12: Serialize/deserialize JSON with Pydantic
+- Playwright test suite with browser automation
+- Positive and negative test scenarios
+- UI element verification
+- Error handling tests
 
-Input validation with Pydantic schemas
-Custom validators for business logic
-Type safety with EmailStr and Field
-Automatic error responses for validation failures
-CLO13: Secure authentication and authorization
+**Criterion: CI/CD Pipeline (10 Points)**
 
-JWT token generation and verification
-Bcrypt password hashing with automatic salting
-Secure password storage (never plain text)
-Token-based authentication flow
-Password strength requirements enforcement
-Author
-Bhavana Vuttunoori GitHub: https://github.com/BhavanaVuttunoori Repository: https://github.com/BhavanaVuttunoori/ASSIGNMENT13
+- GitHub Actions workflow configuration
+- PostgreSQL service container integration
+- Playwright browser automation in CI
+- Docker build and push automation
 
-Acknowledgments
-FastAPI documentation and JWT authentication examples. SQLAlchemy ORM patterns and best practices. Playwright E2E testing framework and documentation. Pydantic validation framework. GitHub Actions workflow templates. Course instructors for project requirements and guidance.
+**Criterion: Documentation (5 Points)**
 
-Support
+- Comprehensive README with setup instructions
+- API documentation via Swagger
+- Code comments and structure
+
+## Helpful Commands
+
+| Task | Command |
+|------|---------|
+| Install dependencies | `pip install -r requirements.txt` |
+| Run application | `uvicorn main:app --reload` |
+| Run all tests | `pytest tests/test_auth.py -v` |
+| Run tests headed | `pytest tests/test_auth.py -v --headed` |
+| Install Playwright | `playwright install chromium` |
+| Build Docker image | `docker build -t jwt-auth-api .` |
+| Run with Docker Compose | `docker-compose up -d` |
+| Stop Docker Compose | `docker-compose down` |
+| View container logs | `docker logs -f jwt_auth_app` |
+
+## Submission Tips
+
+- Commit frequently with meaningful messages describing each feature
+- Keep .env or secrets out of version control (use .gitignore)
+- Verify all tests pass locally before pushing
+- Ensure GitHub Actions workflow completes successfully
+- Capture required screenshots showing green checkmarks in Actions tab
+- Verify Docker image is publicly accessible on Docker Hub
+- Update README with your actual GitHub and Docker Hub usernames
+- Test both registration and login flows manually
+
+## Learning Outcomes
+
+**CLO3: Create Python applications with automated testing**
+
+- Comprehensive E2E tests with Playwright
+- Browser automation for realistic testing
+- Test fixtures and database isolation
+- Front-end and back-end integration tests
+
+**CLO4: Set up GitHub Actions for CI**
+
+- Automated testing on push and pull requests
+- PostgreSQL service containers
+- Playwright browser automation in CI
+- Automated Docker builds and deployment
+
+**CLO9: Apply containerization techniques**
+
+- Optimized Dockerfile for production
+- Docker Compose for local development
+- Environment variable management
+- Service orchestration with health checks
+
+**CLO10: Create, consume, and test REST APIs**
+
+- RESTful endpoint design
+- Proper HTTP methods and status codes
+- API documentation with OpenAPI/Swagger
+- Request/response validation
+
+**CLO11: Integrate with SQL databases**
+
+- SQLAlchemy ORM User model
+- Database session management
+- Unique constraints and indexing
+- PostgreSQL in production
+
+**CLO12: Serialize/deserialize JSON with Pydantic**
+
+- Input validation schemas with custom validators
+- Output serialization
+- Type safety with Python type hints
+- Email validation and password strength checks
+
+**CLO13: Implement secure authentication**
+
+- JWT token generation and validation
+- Password hashing with bcrypt
+- Secure password storage
+- Token-based authentication
+- Configurable token expiration
+
+## Author
+
+**Bhavana Vuttunoori**
+
+- GitHub: https://github.com/BhavanaVuttunoori
+- Repository: https://github.com/BhavanaVuttunoori/ASSIGNMENT13
+
+## Acknowledgments
+
+FastAPI documentation and community examples. SQLAlchemy ORM patterns and best practices. Pydantic validation framework. Playwright testing framework. python-jose for JWT implementation. GitHub Actions workflow templates. Course instructors for project guidance.
+
+## Support
+
 For questions or issues:
 
-Review the API documentation at http://localhost:8000/docs
-Check test outputs for detailed error messages
-Verify environment variables are set correctly
-Ensure PostgreSQL is running and accessible
-Check GitHub Actions logs for CI/CD issues
-License
-This project is for educational purposes as part of Assignment 13 for demonstrating JWT authentication, front-end integration, E2E testing, and CI/CD pipelines.
+- Check the GitHub Issues: https://github.com/BhavanaVuttunoori/ASSIGNMENT13/issues
+- Review the API documentation at http://localhost:8000/docs
+- Contact the repository maintainer
 
-Note: This project was created as part of Assignment 13 for demonstrating JWT-based authentication with user registration and login, responsive front-end pages, comprehensive Playwright E2E testing, and automated CI/CD deployment.
+## License
 
-About
-JWT Authentication API with FastAPI, PostgreSQL, Playwright E2E tests, and CI/CD pipeline for Assignment 13.
-#   T r i g g e r   w o r k f l o w  
-  
- 
+This project is created as part of Assignment 13 for demonstrating JWT authentication, Pydantic validation, front-end integration, E2E testing with Playwright, and CI/CD pipelines.
+
+---
+
+**Note:** This project was created as part of Assignment 13 for demonstrating secure JWT authentication, comprehensive validation with Pydantic, front-end pages with client-side validation, Playwright E2E testing, and automated CI/CD pipelines.
